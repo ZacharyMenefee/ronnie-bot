@@ -1,7 +1,7 @@
 .PHONY: run
 run:
-	ENVIRONMENT=DEV go run main.go
+	ENVIRONMENT=DEV go run ./...
 
 .PHONY: build
 build:
-	go build main.go
+	go build ./...
