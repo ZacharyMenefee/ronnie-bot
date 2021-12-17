@@ -35,7 +35,6 @@ func main() {
 	// send notification in dev channel if rolling out new prod deployment
 	// this works because we're using the dumbest possible deployment
 	// mechanism with a single machine :)
-	// another attempt.
 	if environment == PROD {
 		msg, err := startupMessage()
 		if err != nil {

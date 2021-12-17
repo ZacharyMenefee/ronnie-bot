@@ -12,6 +12,8 @@ import (
 	_ "embed"
 )
 
+// indexHandler is the entry point that takes all registered actions
+// and dispatches to them.
 func indexHandler(s *discordgo.Session, mc *discordgo.MessageCreate) {
 	// ignore messages from self
 	if s.State.User.ID == mc.Author.ID {
@@ -29,6 +31,7 @@ func indexHandler(s *discordgo.Session, mc *discordgo.MessageCreate) {
 	}
 }
 
+// helpHandler provides an index of all registered actions.
 func helpHandler(args []string) string {
 	sb := strings.Builder{}
 	for _, action := range actions() {
@@ -40,6 +43,8 @@ func helpHandler(args []string) string {
 //go:embed static/camp.txt
 var script string
 
+// sleepawayHandler prints a random quote from the Sleepaway Camp movie
+// TODO(Monkeyanator) extend to sending a screencap.
 func sleepawayHandler(args []string) string {
 	quotes := strings.Split(script, "\n")
 	s := rand.NewSource(time.Now().UnixNano())
