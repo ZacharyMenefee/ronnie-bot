@@ -28,7 +28,7 @@ func main() {
 		panic(err)
 	}
 
-	log.Println("running ronnie bot")
+	log.Println("welcome to ronnie bot")
 	for {
 	}
 }
