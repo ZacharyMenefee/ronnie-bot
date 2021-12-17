@@ -66,6 +66,7 @@ func actions() []action {
 	}
 }
 
+// filterEnvironment returns a new handler that ignores messages based on the instance's environment.
 func filterEnvironment(environment string, handler func(s *discordgo.Session, mc *discordgo.MessageCreate)) func(s *discordgo.Session, mc *discordgo.MessageCreate) {
 	return func(s *discordgo.Session, mc *discordgo.MessageCreate) {
 		if environment == DEV {
@@ -82,6 +83,7 @@ func filterEnvironment(environment string, handler func(s *discordgo.Session, mc
 }
 
 func indexHandler(s *discordgo.Session, mc *discordgo.MessageCreate) {
+	// ignore messages from self
 	if s.State.User.ID == mc.Author.ID {
 		return
 	}
