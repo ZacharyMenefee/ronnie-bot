@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -34,6 +35,16 @@ func main() {
 		panic(err)
 	}
 
+	// send notification in dev channel if rolling out new prod deployment
+	// note: this works because we're using the dumbest possible deployment
+	// mechanism with a single machine :)
+	if environment == PROD {
+		msg, err := startupMessage()
+		if err != nil {
+			log.Printf("failed generating startup message: %v", err)
+		}
+		session.ChannelMessageSend(devChannelID, msg)
+	}
 	session.AddHandler(filterEnvironment(environment, indexHandler))
 	if err := session.Open(); err != nil {
 		panic(err)
@@ -119,4 +130,18 @@ func sleepawayHandler(args []string) string {
 
 func prepare(input string) string {
 	return strings.TrimSuffix(input, "\n")
+}
+
+func startupMessage() (string, error) {
+	if _, err := os.Stat(".git"); os.IsNotExist(err) {
+		return "", fmt.Errorf("not in git repo, cannot find hash")
+	}
+
+	gitArgs := []string{"log", "--name-status", "HEAD^..HEAD"}
+	out, err := exec.Command("git", gitArgs...).Output()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("**ronnie-bot has been reborn!**\n```\n%s\n```", out), nil
 }
