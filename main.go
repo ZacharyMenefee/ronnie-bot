@@ -64,7 +64,7 @@ func actions() []action {
 	return []action{
 		{
 			prefix:      "!help",
-			description: "provides an index of available commands",
+			description: "shows an index of available commands",
 			handler:     helpHandler,
 		},
 		{
