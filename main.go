@@ -89,7 +89,6 @@ func indexHandler(s *discordgo.Session, mc *discordgo.MessageCreate) {
 	}
 
 	message := mc.Message.Content
-	log.Printf("message: %s", message)
 	for _, action := range actions() {
 		if strings.HasPrefix(message, action.prefix) {
 			log.Printf("prefix: %q, matched in message: %s", action.prefix, message)
