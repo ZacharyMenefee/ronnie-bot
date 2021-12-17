@@ -8,7 +8,7 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     steps:
-    - name: ssh onto host, clone, and restart the service
+    - name: clone and restart
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SSH_HOST }}
