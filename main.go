@@ -40,6 +40,7 @@ func main() {
 		if err != nil {
 			log.Printf("failed generating startup message: %v", err)
 		}
+		log.Printf("sending startup message: %s", msg)
 		session.ChannelMessageSend(devChannelID, msg)
 	}
 	session.AddHandler(filterEnvironment(environment, indexHandler))
