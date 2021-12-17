@@ -1,0 +1,43 @@
+name: build
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+    - name: Build
+      run: go build -v ./...
+    - name: Test
+      run: go test -v ./...
+
+name: deploy
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: ssh onto host, clone, and restart the service
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        key: ${{ secrets.SSH_KEY }}
+        port: 22
+        script: |
+          rm -rf ronnie-bot
+          git clone https://github.com/Monkeyanator/ronnie-bot.git && cd ronnie-bot
+          make build
+          systemctl restart --user ronnie.service
