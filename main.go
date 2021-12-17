@@ -13,17 +13,28 @@ import (
 	_ "embed"
 )
 
+const (
+	DEV          = "DEV"
+	PROD         = "PROD"
+	devChannelID = "845749844437893121"
+)
+
 func main() {
 	botToken := os.Getenv("BOT_TOKEN")
 	if botToken == "" {
 		panic("did not receive bot token")
 	}
+	environment := os.Getenv("ENVIRONMENT")
+	if environment == "" || (environment != DEV && environment != PROD) {
+		panic("must set valid environment")
+	}
+
 	session, err := discordgo.New("Bot " + botToken)
 	if err != nil {
 		panic(err)
 	}
 
-	session.AddHandler(indexHandler)
+	session.AddHandler(filterEnvironment(environment, indexHandler))
 	if err := session.Open(); err != nil {
 		panic(err)
 	}
@@ -52,6 +63,21 @@ func actions() []action {
 			description: "gives a random quote from sleepaway camp",
 			handler:     sleepawayHandler,
 		},
+	}
+}
+
+func filterEnvironment(environment string, handler func(s *discordgo.Session, mc *discordgo.MessageCreate)) func(s *discordgo.Session, mc *discordgo.MessageCreate) {
+	return func(s *discordgo.Session, mc *discordgo.MessageCreate) {
+		if environment == DEV {
+			if mc.ChannelID != devChannelID {
+				return
+			}
+		} else {
+			if mc.ChannelID == devChannelID {
+				return
+			}
+		}
+		handler(s, mc)
 	}
 }
 
