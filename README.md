@@ -9,3 +9,5 @@ clone the repo and do `make run`. this runs a new dev server that will respond t
 ## deployment
 
 to take a break from the cloud-native containerized deployents and all that noise I elected to do this as dumb as possible. we have a single digital ocean VM running this as a systemd service. when we merge into master a github action ssh's onto the machine, removes the repo, and restarts the service. ¯\_(ツ)_/¯
+
+test
