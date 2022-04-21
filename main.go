@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -23,8 +24,8 @@ func main() {
 		panic("did not receive bot token")
 	}
 	environment := os.Getenv("ENVIRONMENT")
-	if environment == "" || (environment != DEV && environment != PROD) {
-		panic("must set valid environment")
+	if environment != DEV && environment != PROD {
+		panic(environment + " not a valid environment")
 	}
 
 	session, err := discordgo.New("Bot " + botToken)
@@ -49,8 +50,10 @@ func main() {
 	}
 
 	log.Println("running ronnie bot")
-	for {
-	}
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	<-stop
+	log.Println("spinning down ronnie bot")
 }
 
 type msgHandler func(args []string) string
