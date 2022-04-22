@@ -85,6 +85,7 @@ func actions() []action {
 func registerActions(session *discordgo.Session, actions []action) error {
 	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){}
 	for _, action := range actions {
+		action := action
 		cmd := &discordgo.ApplicationCommand{
 			Name:        action.name,
 			Description: action.description,
@@ -97,6 +98,7 @@ func registerActions(session *discordgo.Session, actions []action) error {
 		commandHandlers[action.name] = func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			// TODO(Monkeyanator) implement command arguments.
 			response := action.handler([]string{})
+			log.Printf("Handling action %s", action.name)
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
