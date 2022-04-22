@@ -15,6 +15,7 @@ import (
 const (
 	DEV          = "DEV"
 	PROD         = "PROD"
+	bgsID        = "214507567748087808"
 	devChannelID = "845749844437893121"
 )
 
@@ -32,6 +33,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	if err := session.Open(); err != nil {
+		panic(err)
+	}
+	defer session.Close()
 
 	// send notification in dev channel if rolling out new prod deployment
 	// this works because we're using the dumbest possible deployment
@@ -44,54 +49,69 @@ func main() {
 		log.Printf("sending startup message: %s", msg)
 		session.ChannelMessageSend(devChannelID, msg)
 	}
-	session.AddHandler(filterEnvironment(environment, indexHandler))
-	if err := session.Open(); err != nil {
-		panic(err)
+	if err := registerActions(session, actions()); err != nil {
+		log.Printf("failed to register actions: %v", err)
 	}
 
 	log.Println("running ronnie bot")
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	<-stop
-	log.Println("spinning down ronnie bot")
 }
 
 type msgHandler func(args []string) string
 
 type action struct {
-	prefix, description string
-	handler             msgHandler
+	name, description string
+	handler           msgHandler
 }
 
 func actions() []action {
 	return []action{
 		{
-			prefix:      "!help",
+			name:        "help",
 			description: "shows an index of available commands",
 			handler:     helpHandler,
 		},
 		{
-			prefix:      "!sleepaway",
+			name:        "sleepaway",
 			description: "gives a random quote from sleepaway camp",
 			handler:     sleepawayHandler,
 		},
 	}
 }
 
-// filterEnvironment returns a new handler that ignores messages based on the instance's environment.
-func filterEnvironment(environment string, handler func(s *discordgo.Session, mc *discordgo.MessageCreate)) func(s *discordgo.Session, mc *discordgo.MessageCreate) {
-	return func(s *discordgo.Session, mc *discordgo.MessageCreate) {
-		if environment == DEV {
-			if mc.ChannelID != devChannelID {
-				return
-			}
-		} else {
-			if mc.ChannelID == devChannelID {
-				return
-			}
+// registerActions register our internal representation of text actions as slash commands.
+func registerActions(session *discordgo.Session, actions []action) error {
+	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){}
+	for _, action := range actions {
+		cmd := &discordgo.ApplicationCommand{
+			Name:        action.name,
+			Description: action.description,
 		}
-		handler(s, mc)
+		_, err := session.ApplicationCommandCreate(session.State.User.ID, bgsID, cmd)
+		if err != nil {
+			return fmt.Errorf("failed to create application command %w", err)
+		}
+
+		commandHandlers[action.name] = func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			// TODO(Monkeyanator) implement command arguments.
+			response := action.handler([]string{})
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: response,
+				},
+			})
+		}
 	}
+	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+			h(s, i)
+		}
+	})
+
+	return nil
 }
 
 func startupMessage() (string, error) {
